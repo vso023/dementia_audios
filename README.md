@@ -234,15 +234,20 @@ sumarle Wav2Vec2-large (~1.2–1.5GB) y BETO (~0.5–0.8GB) — **ya cargados,
 no en descarga**.
 
 Con `medium` (el default fuera de Docker) casi seguro no entra en 3.7GB.
-Por eso `docker-compose.yml` usa `WHISPER_MODEL_SIZE=small` por defecto,
-pero incluso así el estimado (~4–4.5GB) puede superar la RAM disponible.
-`base` es la opción más segura si `small` falla.
+**Confirmado en el servidor real**: con `small` los análisis se
+completaban y se guardaban bien, pero tan lento que superaba incluso un
+timeout de proxy generoso (300s) — no era un fallo real, el backend
+seguía trabajando y terminaba, solo que el frontend se rendía antes de
+ver la respuesta. Por eso `docker-compose.yml` usa
+`WHISPER_MODEL_SIZE=base` por defecto ahora, y el timeout del proxy subió
+a 900s (15 min) como margen adicional (ver `vite.config.js`).
 
 Mitigaciones incluidas o sugeridas:
 
-1. **`WHISPER_MODEL_SIZE=small` por defecto** en `.env` — configurable a
-   `base` sin reconstruir la imagen, solo editando `.env` y
-   `docker compose up -d` de nuevo.
+1. **`WHISPER_MODEL_SIZE=base` por defecto** en `.env` — configurable
+   sin reconstruir la imagen: basta con editar `.env` en el servidor y
+   correr `docker compose up -d` de nuevo (recrea el contenedor con la
+   variable nueva, no hace falta `docker compose build`).
 2. **Swap en el host** (fuera de Docker, a nivel Ubuntu) como red de
    seguridad para que un pico de memoria vuelva el proceso lento en vez
    de matarlo:

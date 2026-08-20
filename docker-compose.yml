@@ -17,10 +17,12 @@ services:
       TORCH_DEVICE: cpu
       WHISPER_LANGUAGE: es
 
-      # "small" por defecto por la RAM limitada del servidor (ver aviso
-      # de memoria mas abajo) — configurable desde .env sin reconstruir
-      # la imagen, solo reiniciando el contenedor.
-      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-small}
+      # "base" por defecto: en el servidor real (3.7GB RAM, sin GPU)
+      # "small" completaba los analisis pero muy lento, al punto de
+      # superar el timeout del proxy del frontend. Configurable desde
+      # .env sin reconstruir la imagen — un simple "docker compose up -d"
+      # despues de cambiarla ya recrea el contenedor con el valor nuevo.
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
       DEMENTIA_MAX_AUDIO_SECONDS: ${DEMENTIA_MAX_AUDIO_SECONDS:-600}
 
       # Rutas dentro de los volumenes persistentes (ver "volumes" abajo).
