@@ -38,6 +38,25 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir torch==2.6.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
+# NLTK: el unico uso en todo el backend es word_tokenize(..., language=
+# "spanish") en app/pipeline/text_features.py (se llama incluso al
+# importar el modulo, para tokenizar el texto de referencia del
+# Quijote — por eso hace falta ya en el arranque, no solo en el primer
+# request). word_tokenize usa el tokenizador de oraciones Punkt por
+# dentro; no hace falta ningun otro recurso de NLTK (nada de stopwords,
+# POS tagger, etc. — se reviso el archivo completo).
+#
+# Se descargan "punkt" Y "punkt_tab": requirements.txt fija nltk>=3.8
+# sin techo, y NLTK 3.8.2+ renombro el recurso de "punkt" a "punkt_tab"
+# — la version que efectivamente se instale en el build (sea la que sea)
+# puede pedir cualquiera de los dos segun cuando se reconstruya la
+# imagen. Bajar ambos es barato (unos KB de texto) y evita que este
+# mismo error reaparezca con el otro nombre en un rebuild futuro.
+# NLTK_DATA fija explicitamente donde buscar los datos en runtime, sin
+# depender de HOME/usuario del proceso.
+ENV NLTK_DATA=/usr/local/nltk_data
+RUN python -m nltk.downloader -d /usr/local/nltk_data punkt punkt_tab
+
 # Solo lo necesario para correr el servidor: el codigo de la app y los
 # pesos del clasificador multimodal ya entrenado (~1MB, va en el repo).
 # NO se copian training/, tests/, ni los scripts sueltos de depuracion.
