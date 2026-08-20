@@ -1,0 +1,572 @@
+/* =========================================================================
+   Ilustración del hero — voz → procesamiento → análisis → reporte
+   Composición 100% CSS + SVG inline. Todo es decorativo (aria-hidden).
+   ========================================================================= */
+
+.hv {
+  position: relative;
+  width: 100%;
+  max-width: 470px;
+  margin-inline: auto;
+  padding: 1.5rem 0.5rem 2.25rem;
+  isolation: isolate;
+}
+
+/* ---------- Ambiente ---------- */
+.hv__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  z-index: -2;
+  animation: breathe 11s var(--ease-in-out) infinite;
+}
+
+.hv__orb--a {
+  top: -4%;
+  left: -14%;
+  width: 42%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(82, 115, 224, 0.55), transparent 70%);
+}
+
+.hv__orb--b {
+  top: 34%;
+  right: -16%;
+  width: 46%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(114, 88, 214, 0.42), transparent 70%);
+  animation-delay: 2.6s;
+}
+
+.hv__orb--c {
+  bottom: -6%;
+  left: 8%;
+  width: 40%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(85, 190, 196, 0.4), transparent 70%);
+  animation-delay: 5.1s;
+}
+
+.hv__rings {
+  position: absolute;
+  inset: -8% -6%;
+  width: 112%;
+  height: 116%;
+  z-index: -1;
+  opacity: 0.75;
+}
+
+/* Capas de profundidad */
+.hv__shadow-card {
+  position: absolute;
+  inset-inline: 6%;
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  z-index: -1;
+}
+
+.hv__shadow-card--far {
+  top: 0.1rem;
+  height: 96%;
+  transform: scale(0.94);
+  opacity: 0.5;
+}
+
+.hv__shadow-card--near {
+  top: 0.85rem;
+  height: 97%;
+  transform: scale(0.972);
+  opacity: 0.8;
+}
+
+/* ---------- Panel principal ---------- */
+.hv__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.05rem;
+  border-radius: var(--r-2xl);
+  border: 1px solid rgba(221, 228, 240, 0.9);
+  background:
+    linear-gradient(178deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 255, 0.97) 100%);
+  box-shadow: var(--shadow-xl), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.hv__row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.hv__head {
+  padding-bottom: 0.15rem;
+}
+
+.hv__label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: -0.012em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.hv__sub {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+.hv__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Micrófono con anillos que se expanden */
+.hv__mic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--grad-primary);
+  color: #fff;
+  box-shadow: 0 10px 20px -10px rgba(36, 59, 155, 0.85);
+}
+
+.hv__mic-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1.5px solid rgba(82, 115, 224, 0.55);
+  animation: ring-out 3.4s var(--ease-out) infinite;
+}
+
+.hv__mic-ring--delay {
+  animation-delay: 1.7s;
+}
+
+.hv__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  flex: none;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.hv__chip--live {
+  border-color: rgba(85, 190, 196, 0.42);
+  background: var(--turquoise-soft);
+  color: #1e7176;
+}
+
+.hv__chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--turquoise);
+  animation: pulse-node 2.2s var(--ease-in-out) infinite;
+}
+
+/* ---------- Onda de voz ---------- */
+.hv__wave {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  height: 74px;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(221, 228, 240, 0.8);
+  background: linear-gradient(180deg, var(--blue-light) 0%, rgba(255, 255, 255, 0.5) 100%);
+  overflow: hidden;
+}
+
+.hv__bar {
+  flex: 1;
+  min-width: 2px;
+  height: var(--h);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #7258d6 0%, #3157d5 55%, #55bec4 100%);
+  opacity: 0.85;
+  transform-origin: center;
+  animation: wave-bar 3.6s var(--ease-in-out) infinite;
+  animation-delay: var(--d);
+}
+
+.hv__wave-axis {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(49, 87, 213, 0.22), transparent);
+}
+
+/* ---------- Etapas intermedias ---------- */
+.hv__stage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hv__stage {
+  flex: none;
+  padding: 0.28rem 0.62rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-xs);
+}
+
+.hv__stage-line {
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--border-strong) 50%, transparent 0);
+  background-size: 7px 1px;
+  background-repeat: repeat-x;
+}
+
+/* ---------- Dos vías ---------- */
+.hv__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.hv__mini {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.hv__mini-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-size: 0.6875rem;
+  font-weight: 750;
+  color: var(--primary-dark);
+}
+
+.hv__mini-title svg {
+  color: var(--turquoise);
+}
+
+.hv__mini:last-child .hv__mini-title svg {
+  color: var(--purple);
+}
+
+.hv__mini-viz {
+  width: 100%;
+  height: 34px;
+}
+
+.hv__trace {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: draw-line 2.4s var(--ease-out) 0.35s forwards;
+}
+
+.hv__marker {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-node 3s var(--ease-in-out) infinite;
+}
+
+.hv__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 34px;
+  justify-content: center;
+}
+
+.hv__line {
+  height: 5px;
+  width: var(--w);
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(114, 88, 214, 0.85), rgba(82, 115, 224, 0.35));
+  transform-origin: left center;
+  animation: line-in 4.2s var(--ease-in-out) infinite;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes line-in {
+  0%,
+  100% {
+    transform: scaleX(0.72);
+    opacity: 0.6;
+  }
+  45%,
+  60% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.hv__mini-tags {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+/* ---------- Convergencia ---------- */
+.hv__converge {
+  width: 100%;
+  height: 30px;
+  margin-block: -0.15rem;
+}
+
+.hv__flow-path {
+  animation: dash-flow 3.4s linear infinite;
+}
+
+/* ---------- Modelo ---------- */
+.hv__model {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(114, 88, 214, 0.2);
+  background: linear-gradient(150deg, var(--lavender) 0%, rgba(255, 255, 255, 0.85) 70%);
+}
+
+.hv__model-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 750;
+  color: var(--purple-dark);
+}
+
+.hv__net {
+  width: 100%;
+  height: 84px;
+}
+
+.hv__node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-node 3.8s var(--ease-in-out) infinite;
+}
+
+.hv__node--out {
+  animation-duration: 2.6s;
+}
+
+.hv__model-out {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.24rem 0.6rem;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid rgba(114, 88, 214, 0.28);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--purple-dark);
+}
+
+/* ---------- Reporte ---------- */
+.hv__report {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(36, 133, 109, 0.22);
+  background: linear-gradient(120deg, var(--success-soft) 0%, rgba(255, 255, 255, 0.9) 65%);
+}
+
+.hv__report-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid rgba(36, 133, 109, 0.24);
+  color: var(--success);
+}
+
+.hv__report-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hv__report-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 5px;
+}
+
+.hv__report-lines span {
+  height: 4px;
+  width: var(--w);
+  border-radius: 2px;
+  background: rgba(36, 133, 109, 0.28);
+}
+
+.hv__report-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex: none;
+  padding: 0.24rem 0.55rem;
+  border-radius: var(--r-pill);
+  background: #fff;
+  border: 1px solid rgba(36, 133, 109, 0.26);
+  font-size: 0.625rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--success);
+}
+
+/* ---------- Elementos flotantes ---------- */
+.hv__float {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  padding: 0.36rem 0.7rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-md);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: drift 8s var(--ease-in-out) infinite;
+}
+
+.hv__float svg {
+  color: var(--turquoise);
+}
+
+.hv__float--a {
+  top: 14%;
+  left: -8%;
+  animation-delay: 0.6s;
+}
+
+.hv__float--b {
+  top: 44%;
+  right: -6%;
+  animation-delay: 2.4s;
+}
+
+.hv__float--b svg {
+  color: var(--purple);
+}
+
+.hv__float--c {
+  bottom: 0;
+  left: 2%;
+  animation-delay: 4.2s;
+}
+
+.hv__float--c svg {
+  color: var(--primary);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .hv {
+    max-width: 430px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hv__float--a {
+    left: -2%;
+  }
+
+  /* Sin la columna izquierda del hero no hay margen lateral: este chip
+     pasaría por encima de la tarjeta lingüística, así que se retira. */
+  .hv__float--b {
+    display: none;
+  }
+
+  .hv__float--c {
+    left: -1%;
+  }
+}
+
+@media (max-width: 620px) {
+  .hv {
+    max-width: 380px;
+    padding-inline: 0;
+  }
+
+  /* Sin espacio lateral, los chips flotantes chocarían con el contenido
+     del panel: en pantallas pequeñas la composición se queda limpia. */
+  .hv__float--a,
+  .hv__float--c,
+  .hv__shadow-card--far {
+    display: none;
+  }
+
+  .hv__rings {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 420px) {
+  .hv__panel {
+    padding: 0.85rem;
+    gap: 0.6rem;
+  }
+
+  .hv__wave {
+    height: 62px;
+  }
+
+  .hv__mini-tags {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .hv__split {
+    grid-template-columns: 1fr;
+  }
+
+  .hv__converge {
+    height: 22px;
+  }
+}

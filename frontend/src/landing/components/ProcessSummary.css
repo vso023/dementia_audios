@@ -1,0 +1,202 @@
+.summary {
+  position: relative;
+  padding-block: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  background: linear-gradient(180deg, #eef2fb 0%, var(--surface) 45%, var(--background) 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.summary__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 720px;
+  margin-bottom: clamp(1.75rem, 1rem + 2vw, 2.75rem);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.summary__title {
+  font-size: var(--fs-h3);
+  font-weight: 800;
+}
+
+.summary__caption {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  max-width: 48ch;
+}
+
+/* ---------- Línea conductora (trazado detrás de la cuadrícula) ---------- */
+.summary__grid-wrap {
+  position: relative;
+}
+
+.summary__connector-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.summary__connector-path {
+  transition: stroke-dashoffset 1.7s var(--ease-out);
+}
+
+.summary__connector-node {
+  fill: #5273e0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+/* ---------- Cuadrícula de etapas expandibles ---------- */
+.summary__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.summary__cell {
+  width: 100%;
+}
+
+.summary__details {
+  height: 100%;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition:
+    transform var(--t-slow) var(--ease-out),
+    box-shadow var(--t-slow) var(--ease-out),
+    border-color var(--t-slow) var(--ease-out);
+}
+
+.summary__details:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-medium);
+}
+
+.summary__details[open] {
+  border-color: var(--blue-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.summary__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary__summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--primary);
+  transition: color var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out);
+}
+
+.summary__details[open] .summary__icon {
+  color: var(--purple);
+  border-color: rgba(114, 88, 214, 0.4);
+}
+
+.summary__summary-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.summary__role {
+  font-size: 0.6875rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.summary__label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.summary__chevron {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--text-tertiary);
+  transition: transform var(--t-base) var(--ease-out);
+}
+
+.summary__details[open] .summary__chevron {
+  transform: rotate(180deg);
+}
+
+.summary__desc {
+  margin: 0 var(--space-4) var(--space-4) calc(38px + 0.65rem);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ---------- Pie de sección ---------- */
+.summary__foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 760px;
+  margin: clamp(1.75rem, 1rem + 2vw, 2.75rem) auto 0;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.summary__foot svg {
+  flex: none;
+  margin-top: 0.15em;
+  color: var(--primary);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .summary__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .summary__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary__details:hover {
+    transform: none;
+  }
+
+  .summary__desc {
+    margin-left: var(--space-4);
+  }
+}

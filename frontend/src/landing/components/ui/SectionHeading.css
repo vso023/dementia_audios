@@ -1,0 +1,34 @@
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.section-heading--center {
+  align-items: center;
+  text-align: center;
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+.section-heading--center .section-heading__desc {
+  margin-inline: auto;
+}
+
+.section-heading--start {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.section-heading__title {
+  font-size: var(--fs-h2);
+  max-width: 20ch;
+}
+
+.section-heading--center .section-heading__title {
+  max-width: 22ch;
+}
+
+.section-heading__desc {
+  max-width: 58ch;
+}

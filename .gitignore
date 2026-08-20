@@ -1,0 +1,39 @@
+# Secretos — NUNCA subir
+backend/.env
+
+# Entornos virtuales / dependencias Python
+backend/.venv/
+backend/venv/
+backend/env/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# Cachés de modelos descargados automáticamente (Whisper, HuggingFace:
+# Wav2Vec2/BETO). Por defecto viven fuera del repo (ver HF_HOME y
+# WHISPER_DOWNLOAD_ROOT en .env), pero se cubre por si alguna vez se
+# apuntan dentro de esta carpeta.
+backend/.cache/
+backend/hf_cache/
+backend/whisper_cache/
+**/.cache/huggingface/
+**/.cache/whisper/
+
+# Base de datos local (datos de prueba, se recrea sola con init_db())
+backend/*.db
+backend/*.sqlite3
+
+# NOTA: backend/models/*.pt y backend/models/*.joblib SI se suben — son
+# el clasificador multimodal entrenado, no se descargan de internet.
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Temporales, logs, editor/SO
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

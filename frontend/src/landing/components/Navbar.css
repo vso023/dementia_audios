@@ -1,0 +1,294 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--t-slow) var(--ease-out),
+    border-color var(--t-slow) var(--ease-out),
+    box-shadow var(--t-slow) var(--ease-out),
+    backdrop-filter var(--t-slow) var(--ease-out);
+}
+
+.navbar--scrolled {
+  background-color: rgba(255, 255, 255, 0.82);
+  border-bottom-color: var(--border);
+  box-shadow: 0 6px 24px -18px rgba(36, 59, 155, 0.5);
+  backdrop-filter: saturate(1.6) blur(14px);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: var(--nav-h);
+}
+
+.navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  border-radius: var(--r-md);
+}
+
+.navbar__nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar__list {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  transition:
+    background-color var(--t-slow) var(--ease-out),
+    border-color var(--t-slow) var(--ease-out);
+}
+
+.navbar--scrolled .navbar__list {
+  background-color: rgba(237, 242, 255, 0.66);
+  border-color: rgba(221, 228, 240, 0.9);
+}
+
+.navbar__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 0.85rem;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition:
+    color var(--t-fast) var(--ease-out),
+    background-color var(--t-fast) var(--ease-out);
+}
+
+.navbar__link:hover {
+  color: var(--primary-dark);
+  background-color: rgba(232, 240, 255, 0.9);
+}
+
+.navbar__link.is-active {
+  color: var(--primary-dark);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Indicador que no depende sólo del color */
+.navbar__link.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  background: var(--grad-primary);
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: none;
+}
+
+/* Blanco forzado en TODOS los estados del link, incluido :visited — un
+   <a href="/app"> visitado toma el morado por defecto del user-agent
+   stylesheet, que gana por especificidad a un simple ".navbar__cta"
+   (elemento + pseudo-clase vs. una sola clase). Por eso se listan todos
+   los estados explicitamente en vez de confiar en la cascada. */
+.navbar__cta,
+.navbar__cta:link,
+.navbar__cta:visited,
+.navbar__cta:hover,
+.navbar__cta:active,
+.navbar__cta:focus-visible,
+.navbar__panel-cta,
+.navbar__panel-cta:link,
+.navbar__panel-cta:visited,
+.navbar__panel-cta:hover,
+.navbar__panel-cta:active,
+.navbar__panel-cta:focus-visible {
+  color: #fff;
+}
+
+.navbar__cta svg,
+.navbar__panel-cta svg {
+  color: #fff;
+}
+
+.navbar__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.86);
+  color: var(--primary-dark);
+  transition:
+    background-color var(--t-fast) var(--ease-out),
+    border-color var(--t-fast) var(--ease-out);
+}
+
+.navbar__toggle:hover {
+  background-color: var(--blue-light);
+  border-color: var(--border-strong);
+}
+
+/* ---------------- Panel móvil ---------------- */
+.navbar__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-menu);
+  background-color: rgba(14, 25, 54, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: scrim-in var(--t-base) var(--ease-out) both;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.navbar__panel {
+  position: fixed;
+  top: var(--nav-h);
+  right: var(--space-3);
+  left: var(--space-3);
+  z-index: calc(var(--z-menu) + 1);
+  max-height: calc(100dvh - var(--nav-h) - 1.5rem);
+  overflow-y: auto;
+  padding: var(--space-4);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  box-shadow: var(--shadow-lg);
+  animation: panel-in var(--t-slow) var(--ease-out) both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.navbar__panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.navbar__panel-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border-radius: var(--r-md);
+  font-size: var(--fs-body);
+  font-weight: 650;
+  color: var(--text-primary);
+  transition:
+    background-color var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out);
+  animation: panel-item var(--t-slow) var(--ease-out) both;
+  animation-delay: calc(60ms + var(--i, 0) * 35ms);
+}
+
+@keyframes panel-item {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.navbar__panel-link svg {
+  color: var(--text-tertiary);
+  transition: transform var(--t-fast) var(--ease-out);
+}
+
+.navbar__panel-link:hover {
+  background-color: var(--surface-soft);
+}
+
+.navbar__panel-link:hover svg {
+  transform: translateX(3px);
+}
+
+.navbar__panel-link.is-active {
+  background: linear-gradient(120deg, var(--blue-light), var(--lavender));
+  color: var(--primary-dark);
+}
+
+.navbar__panel-link.is-active svg {
+  color: var(--primary);
+}
+
+.navbar__panel-cta {
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.navbar__panel-note {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1080px) {
+  .navbar__link {
+    padding: 0 0.68rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .navbar__nav {
+    display: none;
+  }
+
+  .navbar__toggle {
+    display: inline-flex;
+  }
+
+  .navbar__inner {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 560px) {
+  .navbar__cta {
+    display: none;
+  }
+}

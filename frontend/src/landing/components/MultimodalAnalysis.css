@@ -1,0 +1,444 @@
+/* =========================================================================
+   Dos vías de análisis que convergen
+   ========================================================================= */
+
+.ma {
+  background:
+    radial-gradient(60% 45% at 20% 12%, rgba(226, 245, 246, 0.7) 0%, transparent 62%),
+    radial-gradient(60% 45% at 82% 18%, rgba(238, 233, 255, 0.8) 0%, transparent 62%),
+    linear-gradient(180deg, var(--surface) 0%, var(--background) 100%);
+  overflow: hidden;
+}
+
+.ma__orb {
+  width: 30rem;
+  height: 30rem;
+  animation: breathe 16s var(--ease-in-out) infinite;
+}
+
+.ma__orb--left {
+  top: 28%;
+  left: -14%;
+  background: radial-gradient(circle, rgba(85, 190, 196, 0.24), transparent 68%);
+}
+
+.ma__orb--right {
+  bottom: 6%;
+  right: -14%;
+  background: radial-gradient(circle, rgba(114, 88, 214, 0.22), transparent 68%);
+  animation-delay: 5.5s;
+}
+
+/* ---------- Las dos vías ---------- */
+.ma__paths {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 0.8rem + 1.6vw, 2.25rem);
+  margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+}
+
+.ma__path-wrap {
+  display: flex;
+}
+
+.ma__path {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  padding: clamp(1.25rem, 0.9rem + 1.2vw, 1.9rem);
+  border-radius: var(--r-2xl);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--t-slow) var(--ease-out),
+    box-shadow var(--t-slow) var(--ease-out);
+}
+
+.ma__path:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Filo superior de color que identifica cada vía */
+.ma__path::before {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 56px;
+  border-radius: 3px;
+  margin-bottom: 0.15rem;
+}
+
+.ma__path--acoustic::before {
+  background: linear-gradient(90deg, #55bec4, #3157d5);
+}
+
+.ma__path--linguistic::before {
+  background: linear-gradient(90deg, #7258d6, #5273e0);
+}
+
+.ma__path-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.ma__path-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+}
+
+.ma__path--acoustic .ma__path-icon {
+  background: var(--turquoise-soft);
+  border-color: rgba(85, 190, 196, 0.34);
+  color: #2c8e93;
+}
+
+.ma__path--linguistic .ma__path-icon {
+  background: var(--lavender);
+  border-color: rgba(114, 88, 214, 0.3);
+  color: var(--purple-dark);
+}
+
+.ma__path-kicker {
+  font-size: 0.6875rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.ma__path-title {
+  font-size: var(--fs-h3);
+  margin-top: 0.1rem;
+}
+
+.ma__path-text {
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 46ch;
+}
+
+/* ---------- Visualizaciones decorativas ---------- */
+.ma__viz {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: var(--space-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.ma__viz--acoustic {
+  background: linear-gradient(160deg, var(--turquoise-soft) 0%, rgba(255, 255, 255, 0.7) 70%);
+}
+
+.ma__viz--linguistic {
+  background: linear-gradient(160deg, var(--lavender) 0%, rgba(255, 255, 255, 0.7) 70%);
+}
+
+/* Vía acústica */
+.ma__wave-svg {
+  width: 100%;
+  height: 82px;
+}
+
+.ma__trace {
+  stroke-dasharray: 700;
+  stroke-dashoffset: 700;
+  animation: draw-line 3s var(--ease-out) 0.3s forwards;
+}
+
+.ma__pause {
+  animation: breathe 5s var(--ease-in-out) infinite;
+}
+
+.ma__spectrum {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 42px;
+}
+
+.ma__spectrum span {
+  flex: 1;
+  height: var(--h);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(49, 87, 213, 0.85), rgba(85, 190, 196, 0.55));
+  transform-origin: bottom center;
+  animation: wave-bar 3.8s var(--ease-in-out) infinite;
+  animation-delay: var(--d);
+}
+
+.ma__timeline {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  height: 14px;
+  padding-top: 4px;
+}
+
+.ma__timeline-line {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(49, 87, 213, 0.2);
+}
+
+.ma__tick {
+  width: 1px;
+  height: 7px;
+  background: rgba(49, 87, 213, 0.32);
+}
+
+/* Vía lingüística */
+.ma__blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ma__blocks span {
+  height: 9px;
+  width: var(--w);
+  border-radius: 5px;
+  background: linear-gradient(90deg, rgba(114, 88, 214, 0.75), rgba(82, 115, 224, 0.32));
+  transform-origin: left center;
+  animation: line-grow 5.4s var(--ease-in-out) infinite;
+  animation-delay: var(--d);
+}
+
+.ma__graph {
+  width: 100%;
+  height: 88px;
+}
+
+.ma__node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-node 3.6s var(--ease-in-out) infinite;
+}
+
+.ma__fragments {
+  display: flex;
+  gap: 6px;
+}
+
+.ma__fragments span {
+  flex: 1;
+  height: 22px;
+  border-radius: 7px;
+  border: 1px dashed rgba(114, 88, 214, 0.32);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.ma__fragments span:nth-child(2) {
+  flex: 1.6;
+}
+
+.ma__illustrative {
+  align-self: flex-start;
+  margin-top: -0.25rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+
+/* ---------- Listas de aspectos ---------- */
+.ma__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: auto;
+}
+
+.ma__list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.72rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: var(--background-warm);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.ma__list svg {
+  flex: none;
+}
+
+.ma__path--acoustic .ma__list svg {
+  color: var(--turquoise);
+}
+
+.ma__path--linguistic .ma__list svg {
+  color: var(--purple);
+}
+
+/* ---------- Convergencia ---------- */
+.ma__converge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: -0.5rem;
+}
+
+.ma__converge-svg {
+  width: 100%;
+  max-width: 900px;
+  height: clamp(56px, 6vw, 90px);
+}
+
+.ma__converge-path {
+  animation: dash-flow 4.2s linear infinite;
+}
+
+.ma__merge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 620px;
+  padding: var(--space-5);
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(82, 115, 224, 0.28);
+  background: linear-gradient(135deg, #ffffff 0%, var(--surface-soft) 100%);
+  box-shadow: var(--shadow-glow);
+}
+
+.ma__merge-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--grad-blue-purple);
+  color: #fff;
+  box-shadow: 0 14px 30px -14px rgba(36, 59, 155, 0.9);
+}
+
+.ma__merge-title {
+  font-size: var(--fs-h4);
+}
+
+.ma__merge-text {
+  margin-top: 0.3rem;
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.ma__down {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
+  animation: hint-bob 3s var(--ease-in-out) infinite;
+}
+
+.ma__model {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 620px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--r-lg);
+  background: var(--grad-deep);
+  color: var(--text-on-dark);
+  box-shadow: var(--shadow-lg);
+}
+
+.ma__model-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(169, 182, 226, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: #93e0e4;
+}
+
+.ma__model > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ma__model strong {
+  font-size: var(--fs-body);
+  font-weight: 750;
+  color: #fff;
+}
+
+.ma__model span span {
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--text-on-dark-soft);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .ma__paths {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ma__converge-svg {
+    display: none;
+  }
+
+  .ma__converge {
+    margin-top: var(--space-6);
+  }
+
+  /* Sin la curva, un conector vertical mantiene la idea de confluencia */
+  .ma__converge::before {
+    content: '';
+    width: 2px;
+    height: 42px;
+    margin-bottom: -0.5rem;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(85, 190, 196, 0.15), rgba(114, 88, 214, 0.7));
+  }
+}
+
+@media (max-width: 560px) {
+  .ma__merge,
+  .ma__model {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .ma__path-head {
+    gap: var(--space-3);
+  }
+
+  .ma__viz {
+    padding: 0.85rem;
+  }
+}

@@ -1,0 +1,195 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(2.5rem, 1rem + 5vw, 5rem) clamp(3.5rem, 2rem + 5vw, 6rem);
+  background:
+    radial-gradient(120% 80% at 78% 8%, rgba(238, 233, 255, 0.75) 0%, transparent 58%),
+    radial-gradient(90% 70% at 6% 0%, rgba(232, 240, 255, 0.9) 0%, transparent 60%),
+    linear-gradient(180deg, #fbfcfe 0%, var(--background) 62%, #eef2fb 100%);
+  overflow: hidden;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero__orb {
+  animation: breathe 13s var(--ease-in-out) infinite;
+}
+
+.hero__orb--one {
+  top: -12%;
+  left: -6%;
+  width: 34rem;
+  height: 34rem;
+  background: radial-gradient(circle, rgba(82, 115, 224, 0.28), transparent 68%);
+}
+
+.hero__orb--two {
+  bottom: -22%;
+  right: -8%;
+  width: 38rem;
+  height: 38rem;
+  background: radial-gradient(circle, rgba(114, 88, 214, 0.22), transparent 68%);
+  animation-delay: 4s;
+}
+
+.hero__waveline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(120px, 18vw, 220px);
+  opacity: 0.9;
+}
+
+.hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  align-items: center;
+  gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+}
+
+/* ---------- Columna de contenido ---------- */
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  animation: hero-in 700ms var(--ease-out) both;
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero__title {
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.032em;
+  max-width: 15ch;
+  margin-block: -0.15rem;
+}
+
+.hero__lead {
+  max-width: 54ch;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hero__note {
+  align-items: center;
+  padding: 0.55rem 0.95rem 0.55rem 0.8rem;
+  border-radius: var(--r-pill);
+  border: 1px dashed rgba(82, 115, 224, 0.42);
+  background: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.hero__note svg {
+  margin-top: 0;
+}
+
+/* ---------- Columna visual ---------- */
+.hero__visual {
+  position: relative;
+  animation: hero-in 800ms var(--ease-out) 140ms both;
+}
+
+/* ---------- Indicador de scroll ---------- */
+.hero__scroll-hint {
+  /* `flex` (no `inline-flex`) para que `margin-inline: auto` sí centre */
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: clamp(2rem, 1rem + 3vw, 3.25rem) auto 0;
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: fit-content;
+  transition:
+    color var(--t-fast) var(--ease-out),
+    border-color var(--t-fast) var(--ease-out),
+    background-color var(--t-fast) var(--ease-out);
+}
+
+.hero__scroll-hint svg {
+  animation: hint-bob 2.8s var(--ease-in-out) infinite;
+}
+
+.hero__scroll-hint:hover {
+  color: var(--primary-dark);
+  border-color: var(--blue-medium);
+  background-color: #fff;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .hero__inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+}
+
+@media (max-width: 940px) {
+  .hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.25rem, 1rem + 5vw, 3.25rem);
+  }
+
+  .hero__content {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero__title,
+  .hero__lead {
+    max-width: 22ch;
+  }
+
+  .hero__lead {
+    max-width: 56ch;
+  }
+
+  .hero__actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero__title {
+    font-size: clamp(2.25rem, 1.3rem + 4.6vw, 2.75rem);
+  }
+
+  .hero__actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero__note {
+    align-items: flex-start;
+    border-radius: var(--r-lg);
+  }
+}

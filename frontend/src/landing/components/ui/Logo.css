@@ -1,0 +1,81 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.68rem;
+}
+
+.logo__mark {
+  display: block;
+  flex: none;
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 20px -10px rgba(36, 59, 155, 0.75);
+  transition: transform var(--t-base) var(--ease-out);
+}
+
+.logo__mark svg {
+  border-radius: var(--r-md);
+}
+
+a:hover .logo__mark,
+button:hover .logo__mark {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.logo__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.logo__name {
+  font-size: 1.03rem;
+  font-weight: 800;
+  letter-spacing: -0.024em;
+  color: var(--text-primary);
+}
+
+.logo__tagline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  color: var(--text-secondary);
+}
+
+.logo--light .logo__name {
+  color: #fff;
+}
+
+.logo--light .logo__tagline {
+  color: var(--text-on-dark-soft);
+}
+
+/* Movimiento ambiental muy lento de las barras */
+.logo__bars--live rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: logo-bar 5.2s var(--ease-in-out) infinite;
+}
+
+.logo__bars--live rect:nth-child(2) {
+  animation-delay: 0.42s;
+}
+
+.logo__bars--live rect:nth-child(3) {
+  animation-delay: 0.84s;
+}
+
+@keyframes logo-bar {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.62);
+  }
+}
+
+@media (max-width: 400px) {
+  .logo__tagline {
+    display: none;
+  }
+}

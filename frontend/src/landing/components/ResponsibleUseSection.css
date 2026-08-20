@@ -1,0 +1,243 @@
+/* =========================================================================
+   Uso responsable — bloque oscuro, sereno, sin estética de alerta
+   ========================================================================= */
+
+.ru {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(4rem, 2.5rem + 5vw, 6.5rem);
+  background: linear-gradient(158deg, #16255e 0%, #1e2f74 45%, #2b2f7d 100%);
+  color: var(--text-on-dark);
+  overflow: hidden;
+}
+
+.ru__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ru__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  animation: breathe 18s var(--ease-in-out) infinite;
+}
+
+.ru__orb--a {
+  top: -14%;
+  left: 6%;
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, rgba(85, 190, 196, 0.28), transparent 66%);
+}
+
+.ru__orb--b {
+  bottom: -20%;
+  right: 2%;
+  width: 34rem;
+  height: 34rem;
+  background: radial-gradient(circle, rgba(155, 133, 240, 0.3), transparent 66%);
+  animation-delay: 6s;
+}
+
+.ru__waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(150px, 20vw, 260px);
+  opacity: 0.8;
+}
+
+/* ---------- Contenido ---------- */
+.ru__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.ru__shield {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 24px;
+  border: 1px solid rgba(169, 182, 226, 0.32);
+  background: rgba(255, 255, 255, 0.08);
+  color: #93e0e4;
+  box-shadow: 0 20px 46px -22px rgba(5, 12, 36, 0.9);
+}
+
+.ru__shield-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 30px;
+  border: 1px solid rgba(85, 190, 196, 0.4);
+  animation: ring-out 4.5s var(--ease-out) infinite;
+}
+
+.ru__eyebrow {
+  color: var(--turquoise);
+}
+
+.ru__title {
+  font-size: var(--fs-h2);
+  color: #fff;
+  max-width: 18ch;
+}
+
+/* Declaración principal, la pieza más visible de la sección */
+.ru__statement {
+  position: relative;
+  max-width: 780px;
+  margin: var(--space-2) 0 var(--space-4);
+  padding: clamp(1.25rem, 0.9rem + 1.4vw, 2rem) clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(169, 182, 226, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--shadow-on-dark);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Filo de color en el borde superior */
+.ru__statement::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: min(220px, 60%);
+  height: 2px;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, #55bec4, #9b85f0, transparent);
+}
+
+.ru__statement p {
+  font-size: clamp(1.06rem, 0.98rem + 0.5vw, 1.3rem);
+  font-weight: 650;
+  line-height: 1.6;
+  color: #fff;
+  text-wrap: pretty;
+}
+
+/* ---------- Acordeón ---------- */
+.ru__accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 720px;
+  margin-top: var(--space-2);
+  text-align: left;
+}
+
+.ru__item {
+  width: 100%;
+}
+
+.ru__details {
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(169, 182, 226, 0.18);
+  background: rgba(255, 255, 255, 0.045);
+  overflow: hidden;
+  transition: border-color var(--t-slow) var(--ease-out), background-color var(--t-slow) var(--ease-out);
+}
+
+.ru__details:hover {
+  border-color: rgba(85, 190, 196, 0.4);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.ru__details[open] {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Se oculta el marcador nativo de <summary> para usar el chevron propio */
+.ru__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+.ru__summary::-webkit-details-marker {
+  display: none;
+}
+
+.ru__point-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  border: 1px solid rgba(85, 190, 196, 0.42);
+  background: rgba(85, 190, 196, 0.14);
+  color: #93e0e4;
+}
+
+.ru__summary-title {
+  flex: 1;
+  font-size: var(--fs-sm);
+  font-weight: 750;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.ru__summary-chevron {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--text-on-dark-soft);
+  transition: transform var(--t-base) var(--ease-out);
+}
+
+.ru__details[open] .ru__summary-chevron {
+  transform: rotate(180deg);
+}
+
+.ru__point-text {
+  margin: 0 var(--space-4) var(--space-4) calc(26px + 0.7rem + var(--space-4));
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-on-dark-soft);
+}
+
+/* ---------- Pie ---------- */
+.ru__foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 68ch;
+  margin-top: var(--space-4);
+  font-size: var(--fs-xs);
+  line-height: 1.65;
+  text-align: left;
+  color: var(--text-on-dark-soft);
+}
+
+.ru__foot svg {
+  flex: none;
+  margin-top: 0.15em;
+  color: var(--turquoise);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .ru__title {
+    max-width: 22ch;
+  }
+
+  .ru__point-text {
+    margin-left: var(--space-4);
+  }
+}
