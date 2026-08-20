@@ -1,5 +1,9 @@
 # Secretos — NUNCA subir
 backend/.env
+# .env de docker-compose (raiz de webapp/, junto a docker-compose.yml).
+# Patron sin ancla a proposito: cubre cualquier ".env" real en cualquier
+# nivel, ademas de la linea especifica de arriba (cinturon y tirantes).
+.env
 
 # Entornos virtuales / dependencias Python
 backend/.venv/

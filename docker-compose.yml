@@ -1,0 +1,91 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    # Sin "ports:" a proposito: el backend NO se expone al host, solo es
+    # alcanzable desde el contenedor del frontend via la red interna
+    # "app_net" (nombre de servicio "backend", puerto 8000).
+    environment:
+      # Secreto real, nunca escrito en este archivo — sale del .env que
+      # docker-compose lee automaticamente desde esta misma carpeta
+      # (webapp/.env, gitignored). Ver .env.example para la plantilla.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5}
+
+      # CPU siempre en este servidor (sin GPU).
+      WHISPER_DEVICE: cpu
+      TORCH_DEVICE: cpu
+      WHISPER_LANGUAGE: es
+
+      # "small" por defecto por la RAM limitada del servidor (ver aviso
+      # de memoria mas abajo) — configurable desde .env sin reconstruir
+      # la imagen, solo reiniciando el contenedor.
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-small}
+      DEMENTIA_MAX_AUDIO_SECONDS: ${DEMENTIA_MAX_AUDIO_SECONDS:-600}
+
+      # Rutas dentro de los volumenes persistentes (ver "volumes" abajo).
+      DEMENTIA_DB_PATH: /data/dementia_tool.db
+      HF_HOME: /model_cache/huggingface
+      WHISPER_DOWNLOAD_ROOT: /model_cache/whisper
+
+    volumes:
+      # Base de datos SQLite: sobrevive a "docker compose down"/recrear
+      # el contenedor. Sin este volumen, cada rebuild borraria pacientes
+      # y analisis guardados.
+      - backend_data:/data
+      # Cache de los modelos que se descargan solos la primera vez
+      # (Wav2Vec2 ~1.2GB, BETO ~440MB, Whisper segun WHISPER_MODEL_SIZE).
+      # Con esto, un "docker compose down && up" no vuelve a descargarlos.
+      - hf_cache:/model_cache/huggingface
+      - whisper_cache:/model_cache/whisper
+
+    networks:
+      - app_net
+
+    # Limite de memoria DESACTIVADO a proposito por ahora: con 3.7GB de
+    # RAM total, un limite mal calculado solo cambiaria un fallo por
+    # falta de RAM (mas facil de diagnosticar en logs) por un
+    # SIGKILL silencioso de Docker. Ver el aviso de memoria en la
+    # respuesta para como decidir un numero real una vez que se vea el
+    # consumo con "docker stats". Para activarlo despues, descomentar:
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 3000M
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    # Unico puerto publicado de toda la herramienta — el proxy del
+    # administrador (dominio + SSL) apunta aca. 4173 es el puerto interno
+    # por defecto de `vite preview` (ver vite.config.js, seccion preview).
+    ports:
+      - "5014:4173"
+    environment:
+      # Como ya no hay nginx haciendo de proxy, `vite preview` lo
+      # reemplaza (ver vite.config.js) — necesita saber donde esta el
+      # backend. "backend" se resuelve por el nombre del servicio de
+      # abajo, vía la red interna "app_net"; el backend sigue sin puerto
+      # publicado al host, nunca es alcanzable desde fuera de Docker.
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - app_net
+    deploy:
+      resources:
+        limits:
+          # Sin nginx: esto es un proceso Node (`vite preview`) sirviendo
+          # los estaticos y proxeando /api, algo mas pesado que nginx
+          # pero igual modesto (tipicamente 60-150MB en uso real). El
+          # limite es un techo de seguridad con margen, no un ajuste fino.
+          memory: 256M
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  backend_data:
+  hf_cache:
+  whisper_cache:

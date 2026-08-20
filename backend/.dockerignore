@@ -1,0 +1,14 @@
+.venv/
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+*.db
+*.sqlite3
+tests/
+training/
+probar_pipeline_sin_llm.py
+seed_datos_prueba.py
+.git/

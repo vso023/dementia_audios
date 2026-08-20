@@ -157,6 +157,128 @@ Servir `frontend/dist/` con cualquier servidor de archivos estáticos
 desarrollo. Configurar `CORSMiddleware` en `app/main.py` con el dominio
 real en vez de `allow_origins=["*"]` antes de exponerlo públicamente.
 
+## Despliegue con Docker
+
+Alternativa empaquetada a la sección anterior: `docker-compose.yml` en la
+raíz de `webapp/` levanta dos contenedores — `backend` (FastAPI, sin
+puerto publicado, solo alcanzable desde `frontend`) y `frontend` (build
+de producción servido por `vite preview`, publicado en el puerto
+**5014**). **Sin nginx propio** — el servidor tiene su propio proxy
+inverso a nivel de sistema (dominio + SSL) apuntando a ese puerto; esta
+herramienta solo necesita escuchar ahí en HTTP plano.
+
+```bash
+git clone <url-del-repo>
+cd webapp
+
+cp .env.example .env
+nano .env   # completar ANTHROPIC_API_KEY (nunca se escribe en archivos del repo)
+
+docker compose build
+docker compose up -d
+
+docker compose logs -f backend   # confirmar "Application startup complete"
+curl http://localhost:5014/api/pacientes   # debe responder "[]"
+```
+
+La base de datos y las cachés de Whisper/Wav2Vec2/BETO viven en volúmenes
+Docker nombrados (`backend_data`, `hf_cache`, `whisper_cache`) — persisten
+aunque se recreen los contenedores; solo se pierden con
+`docker compose down -v`.
+
+### Comunicación frontend-backend sin nginx
+
+Un solo puerto publicado (**5014**, únicamente el `frontend`) — el
+`backend` nunca se expone al host ni a internet, solo es alcanzable
+dentro de la red interna de Docker (`app_net`) que crea
+`docker-compose.yml`.
+
+Como ya no hay nginx haciendo de proxy, ese rol lo cumple `vite preview`
+(la app React sigue llamando a rutas relativas `/api/...`, sin ningún
+cambio de código — ver `frontend/vite.config.js`, sección `preview`):
+
+```
+navegador → (dominio+SSL del admin) → :5014 → contenedor frontend
+                                                 ├─ archivos estáticos (build de React)
+                                                 └─ /api/*  →  proxea internamente →  contenedor backend:8000
+```
+
+`vite preview` no es tan robusto como un servidor estático dedicado
+(nginx, `serve`) para tráfico alto — aquí es una elección razonable
+porque el tráfico real es bajo (herramienta de uso interno) y ya vive
+detrás del proxy externo del administrador, que puede absorber
+compresión/caché si hiciera falta. Si en algún momento se prefiere volver
+a un servidor estático "de verdad", la alternativa sería exponer el
+backend en un puerto interno propio y apuntar el frontend ahí — pero
+entonces el administrador tendría que enrutar también ese puerto, que es
+justo lo que esta solución evita.
+
+**No hace falta exponer ningún puerto adicional** ni pedirle nada más al
+administrador: todo lo que no sea el frontend se resuelve dentro de la
+red interna de Docker.
+
+**Proxy inverso / SSL**: ni el backend ni `vite preview` fuerzan HTTPS ni
+redirigen por protocolo — ambos sirven HTTP plano tal cual, que es lo que
+espera un proxy externo que termina el SSL antes de reenviar. El backend
+corre con `uvicorn --proxy-headers` (ver `backend/Dockerfile`) para
+confiar en las cabeceras `X-Forwarded-*` en vez de ver siempre al
+frontend como "el cliente" — no hay nada más que configurar de este lado
+para funcionar detrás de un proxy con dominio y SSL.
+
+### Aviso de memoria (servidor sin GPU, 3.7GB RAM)
+
+Whisper + Wav2Vec2 + BETO cargados a la vez en CPU son pesados. Tabla de
+referencia de Whisper (RAM aproximada requerida, según el propio repo de
+OpenAI): `medium` ≈ 5GB, `small` ≈ 2GB, `base` ≈ 1GB. A eso hay que
+sumarle Wav2Vec2-large (~1.2–1.5GB) y BETO (~0.5–0.8GB) — **ya cargados,
+no en descarga**.
+
+Con `medium` (el default fuera de Docker) casi seguro no entra en 3.7GB.
+Por eso `docker-compose.yml` usa `WHISPER_MODEL_SIZE=small` por defecto,
+pero incluso así el estimado (~4–4.5GB) puede superar la RAM disponible.
+`base` es la opción más segura si `small` falla.
+
+Mitigaciones incluidas o sugeridas:
+
+1. **`WHISPER_MODEL_SIZE=small` por defecto** en `.env` — configurable a
+   `base` sin reconstruir la imagen, solo editando `.env` y
+   `docker compose up -d` de nuevo.
+2. **Swap en el host** (fuera de Docker, a nivel Ubuntu) como red de
+   seguridad para que un pico de memoria vuelva el proceso lento en vez
+   de matarlo:
+   ```bash
+   sudo fallocate -l 4G /swapfile
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile
+   sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   ```
+   Con swap, un análisis puede volverse muy lento si realmente no entra
+   en RAM — no es un sustituto de tener RAM suficiente, solo evita que el
+   contenedor muera.
+3. **Límite de memoria de Docker**: lo dejé comentado en
+   `docker-compose.yml` a propósito. Ponerle un número antes de saber el
+   consumo real solo cambia "se queda sin RAM" (visible en logs) por "Docker
+   lo mata en seco" (más confuso). Verificar primero con `docker stats`.
+4. **Si ni `base` entra**: la arquitectura actual mantiene los tres
+   modelos cargados en memoria todo el tiempo de vida del proceso (para
+   no recargarlos en cada request). Existe la opción de cambiar esto para
+   cargar/descargar modelos por request — baja mucho el pico de RAM, a
+   costa de que cada análisis se vuelva bastante más lento. No lo
+   implementé ahora porque es un cambio de arquitectura, no de
+   despliegue; se puede pedir aparte si hace falta.
+5. **La opción más simple, si es posible**: subir la RAM del servidor
+   aunque sea a 6GB quita casi toda la presión y permite volver a
+   `medium` para mejor precisión de transcripción.
+
+Verificar consumo real ya desplegado:
+
+```bash
+docker stats                 # RAM en vivo por contenedor
+free -h                      # RAM/swap del host
+docker compose logs backend | grep -i "kill\|memory"
+```
+
 ## Modelo de datos (SQLite)
 
 `Profesional 1—N Paciente 1—N Análisis 1—1 Reporte`. El MVP implementa
