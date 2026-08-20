@@ -17,11 +17,25 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Se instala primero el PyTorch CPU-only desde el indice oficial; cuando
-# requirements.txt pida "torch>=2.0" mas abajo, pip ve que ya esta
-# satisfecho y no lo vuelve a instalar desde el indice por defecto
-# (que traeria la build con CUDA).
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+# PyTorch CPU-only. Dos detalles necesarios, no cosmeticos:
+#
+# 1. "--extra-index-url" en vez de "--index-url": con --index-url a
+#    secas, pip busca TODO en el indice de PyTorch (incluidas
+#    dependencias auxiliares como flit_core, que ahi no existen) y la
+#    build falla. Con --extra-index-url, PyPI normal sigue disponible
+#    para esas dependencias; el indice de PyTorch se suma, no reemplaza.
+#
+# 2. Version fijada con sufijo "+cpu" ("==2.6.0+cpu", no solo
+#    "--extra-index-url" con "torch" a secas): con dos indices
+#    disponibles, si solo se pide "torch" sin mas, pip puede resolver
+#    igual la build con CUDA de PyPI (mismo numero de version, pip no
+#    prioriza un indice sobre otro de forma confiable — es un problema
+#    conocido, no hipotetico). El sufijo "+cpu" solo existe en el indice
+#    de PyTorch, asi que fija sin ambiguedad cual de las dos se instala,
+#    sin importar el orden de busqueda entre indices. 2.6.0 es ademas la
+#    version exacta con la que se desarrollo y probo este proyecto
+#    (torch 2.6.0+cu124 en la maquina de desarrollo).
+RUN pip install --no-cache-dir torch==2.6.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
 # Solo lo necesario para correr el servidor: el codigo de la app y los
