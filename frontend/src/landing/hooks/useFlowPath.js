@@ -1,47 +1,65 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
 /**
- * Arma el trazado a partir de los puntos (ancla de cada tarjeta, estable
- * aunque la tarjeta se expanda) y los rects de tarjeta completos (para
- * saber donde esta el "hueco" real entre filas). `columnas` viene de leer
- * el grid-template-columns computado, asi que el agrupamiento por fila
- * siempre coincide con el layout real, sea cual sea el breakpoint activo.
+ * Arma el trazado usando SOLO los huecos (gaps) del grid — nunca el area
+ * de una tarjeta, ni siquiera oculta detras de ella. Version anterior
+ * conectaba centro-de-icono a centro-de-icono, lo que hacia que buena
+ * parte de cada tramo pasara POR DEBAJO del cuerpo de la tarjeta (oculto
+ * por su fondo opaco, pero no confinado geometricamente al hueco) — con
+ * esquinas redondeadas eso se ve mal (el trazo asoma en el borde curvo,
+ * donde el fondo rectangular no llega a cubrir del todo). Ahora cada
+ * tramo toca la tarjeta SOLO en su borde exacto, nunca mas alla:
  *
- * - Dentro de una misma fila: segmento recto horizontal (mismo Y).
- * - Al cambiar de fila: curva en C con manijas verticales (misma X que el
- *   punto de salida/llegada, Y en el hueco entre el fondo de la tarjeta
- *   que termina la fila y el techo de la que empieza la siguiente) — esto
- *   evita que la linea cruce en diagonal por encima de tarjetas vecinas.
- *   Con una sola columna, salida.x === llegada.x y la curva colapsa sola
- *   en una linea vertical recta.
+ * - Mismo fila: linea recta desde el borde DERECHO de una tarjeta hasta
+ *   el borde IZQUIERDO de la siguiente, a la altura del icono (mismo Y
+ *   en toda la fila). Vive enteramente en el hueco de columna.
+ * - Cambio de fila: curva en C desde el borde INFERIOR de la tarjeta que
+ *   termina la fila hasta el borde SUPERIOR de la que empieza la
+ *   siguiente, con manijas verticales (misma X que cada extremo) para
+ *   que la curva nunca salga de la banda vacia entre filas. Con una sola
+ *   columna, entrada.x === salida.x y la curva colapsa sola en una linea
+ *   vertical recta — sigue sin tocar ninguna tarjeta.
+ *
+ * Como los tramos ya no comparten vertice en el borde de cada tarjeta
+ * (el tramo que llega toca el borde izquierdo, el que sale toca el
+ * borde derecho — son puntos distintos, con la tarjeta entera entre
+ * medio), el trazado resulta en varios sub-trazados independientes
+ * dentro del mismo `d` (varios "M"), no una sola polilinea continua. Es
+ * SVG valido y la animacion de dibujado (stroke-dasharray/dashoffset vía
+ * getTotalLength) sigue funcionando igual sobre el largo total.
  */
-function construirTrazado(puntos, cardRects, columnas) {
-  if (puntos.length === 0) return ''
+function construirTrazado(iconos, cards, columnas) {
+  if (iconos.length === 0) return ''
 
-  let d = `M ${puntos[0].x},${puntos[0].y}`
+  const tramos = []
 
-  for (let i = 0; i < puntos.length - 1; i++) {
-    const p0 = puntos[i]
-    const p1 = puntos[i + 1]
+  for (let i = 0; i < iconos.length - 1; i++) {
     const filaActual = Math.floor(i / columnas)
     const filaSiguiente = Math.floor((i + 1) / columnas)
+    const card0 = cards[i]
+    const card1 = cards[i + 1]
 
     if (filaActual === filaSiguiente) {
-      d += ` L ${p1.x},${p1.y}`
+      const y = (iconos[i].y + iconos[i + 1].y) / 2
+      tramos.push(`M ${card0.right},${y} L ${card1.left},${y}`)
     } else {
-      const gapY = (cardRects[i].bottom + cardRects[i + 1].top) / 2
-      d += ` C ${p0.x},${gapY} ${p1.x},${gapY} ${p1.x},${p1.y}`
+      const x0 = iconos[i].x
+      const x1 = iconos[i + 1].x
+      const y0 = card0.bottom
+      const y1 = card1.top
+      const gapY = (y0 + y1) / 2
+      tramos.push(`M ${x0},${y0} C ${x0},${gapY} ${x1},${gapY} ${x1},${y1}`)
     }
   }
 
-  return d
+  return tramos.join(' ')
 }
 
 export function useFlowPath(count) {
   const wrapRef = useRef(null)
   const gridRef = useRef(null)
-  const itemRefs = useRef([]) // ancla de cada tarjeta (icono): estable al expandir
-  const cardRefs = useRef([]) // tarjeta completa: para el hueco entre filas
+  const itemRefs = useRef([]) // icono de cada tarjeta: centro para los nodos, estable al expandir
+  const cardRefs = useRef([]) // tarjeta completa: bordes reales para el trazado
   const [points, setPoints] = useState([])
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [pathD, setPathD] = useState('')
@@ -52,7 +70,7 @@ export function useFlowPath(count) {
 
     function medir() {
       const wrapRect = wrap.getBoundingClientRect()
-      const nuevosPuntos = []
+      const nuevosIconos = []
       const nuevosCards = []
 
       for (let i = 0; i < count; i++) {
@@ -63,11 +81,13 @@ export function useFlowPath(count) {
         const ir = iconEl.getBoundingClientRect()
         const cr = cardEl.getBoundingClientRect()
 
-        nuevosPuntos.push({
+        nuevosIconos.push({
           x: ir.left - wrapRect.left + ir.width / 2,
           y: ir.top - wrapRect.top + ir.height / 2,
         })
         nuevosCards.push({
+          left: cr.left - wrapRect.left,
+          right: cr.right - wrapRect.left,
           top: cr.top - wrapRect.top,
           bottom: cr.bottom - wrapRect.top,
         })
@@ -81,9 +101,9 @@ export function useFlowPath(count) {
         columnas = valores.length || 1
       }
 
-      setPoints(nuevosPuntos)
+      setPoints(nuevosIconos)
       setSize({ width: wrapRect.width, height: wrapRect.height })
-      setPathD(construirTrazado(nuevosPuntos, nuevosCards, columnas))
+      setPathD(construirTrazado(nuevosIconos, nuevosCards, columnas))
     }
 
     medir()

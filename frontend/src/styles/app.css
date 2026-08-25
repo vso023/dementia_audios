@@ -96,6 +96,19 @@ textarea {
 }
 
 /* ── Header ──────────────────────────────────────────────────────── */
+.app-header-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Visible en todo momento dentro de la herramienta (AppHeader se
+   renderiza siempre, antes de cualquier paso del asistente) — unica
+   forma de volver a la landing desde /app. */
+.app-header__back {
+  align-self: flex-start;
+}
+
 .app-header {
   display: flex;
   align-items: flex-start;
@@ -618,6 +631,24 @@ textarea {
   border-radius: var(--radius-full);
   background: var(--primary);
   display: inline-block;
+}
+
+.sample-audio {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--border);
+}
+
+.sample-audio__label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.sample-audio__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .file-summary {
