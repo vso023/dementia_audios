@@ -26,39 +26,84 @@
   max-width: 48ch;
 }
 
-/* ---------- Línea conductora (trazado detrás de la cuadrícula) ---------- */
-.summary__grid-wrap {
-  position: relative;
-}
-
-.summary__connector-svg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.summary__connector-path {
-  transition: stroke-dashoffset 1.7s var(--ease-out);
-}
-
-.summary__connector-node {
-  fill: #5273e0;
-  transition: opacity 0.5s var(--ease-out);
-}
-
 /* ---------- Cuadrícula de etapas expandibles ---------- */
 .summary__grid {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  column-gap: 2rem;
+  row-gap: 2.5rem;
 }
 
 .summary__cell {
+  position: relative; /* ancla para la flechita ::after del hueco */
   width: 100%;
+}
+
+/* ---------- Flechas de orden entre tarjetas ----------
+   Puro CSS via nth-child, sin JS: cada tarjeta (salvo la ultima) recibe
+   una flecha en su ::after, posicionada en el hueco del grid hacia la
+   siguiente tarjeta del recorrido. Las reglas de que nth-child recibe
+   flecha "derecha" vs "abajo" dependen de cuantas columnas hay en cada
+   breakpoint (ver los @media abajo), asi que se redefinen por completo
+   en cada uno en vez de intentar que una sola regla sirva para los tres. */
+.summary__cell::after {
+  content: "";
+  position: absolute;
+  display: grid;
+  place-items: center;
+  color: var(--purple);
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 700;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+/* ---------- Responsive ---------- */
+/* Escritorio: 3 columnas. Filas: (1,2,3) (4,5,6) (7,8,9). */
+@media (min-width: 901px) {
+  /* Flecha derecha: toda tarjeta que NO es la ultima de su fila (o sea,
+     no es multiplo de 3) y no es la ultima de todas. */
+  .summary__cell:not(:nth-child(3n)):not(:last-child)::after {
+    content: "›";
+    right: -1.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Flecha abajo: la ultima tarjeta de cada fila (multiplo de 3),
+     excepto si ademas es la ultima de todas (la 9). */
+  .summary__cell:nth-child(3n):not(:last-child)::after {
+    content: "⌄";
+    left: 50%;
+    bottom: -1.85rem;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 900px) {
+  .summary__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 2.25rem;
+  }
+
+  /* 2 columnas: filas (1,2) (3,4) (5,6) (7,8) (9). Impares = primera de
+     su fila -> flecha derecha (salvo si son la ultima tarjeta de todas,
+     como la 9). Pares = fin de fila -> flecha abajo. */
+  .summary__cell:nth-child(odd):not(:last-child)::after {
+    content: "›";
+    right: -1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .summary__cell:nth-child(even):not(:last-child)::after {
+    content: "⌄";
+    left: 50%;
+    bottom: -1.6rem;
+    transform: translateX(-50%);
+  }
 }
 
 .summary__details {
@@ -180,16 +225,25 @@
   color: var(--primary);
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 900px) {
-  .summary__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 560px) {
   .summary__grid {
     grid-template-columns: minmax(0, 1fr);
+    row-gap: 2.25rem;
+  }
+
+  /* Una sola columna: cada tarjeta (salvo la ultima) apunta hacia abajo
+     a la siguiente. Se usa ":nth-child(n)" (coincide con todas) a
+     proposito, no ":not(:last-child)" solo — necesita la MISMA
+     especificidad que las reglas de la media query de 900px (dos
+     pseudo-clases) para poder pisarlas aqui; con menos especificidad,
+     el orden en el archivo no alcanza para ganar la cascada. */
+  .summary__cell:nth-child(n):not(:last-child)::after {
+    content: "⌄";
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: -1.6rem;
+    transform: translateX(-50%);
   }
 
   .summary__details:hover {
