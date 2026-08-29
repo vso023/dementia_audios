@@ -40,12 +40,23 @@
 }
 
 /* ---------- Flechas de orden entre tarjetas ----------
-   Puro CSS via nth-child, sin JS: cada tarjeta (salvo la ultima) recibe
-   una flecha en su ::after, posicionada en el hueco del grid hacia la
-   siguiente tarjeta del recorrido. Las reglas de que nth-child recibe
-   flecha "derecha" vs "abajo" dependen de cuantas columnas hay en cada
-   breakpoint (ver los @media abajo), asi que se redefinen por completo
-   en cada uno en vez de intentar que una sola regla sirva para los tres. */
+   Puro CSS, sin JS: cada tarjeta (salvo la ultima) recibe una flecha en
+   su ::after, posicionada en el hueco del grid hacia la siguiente
+   tarjeta del recorrido.
+
+   Escritorio (3 columnas): el recorrido es un serpiente real
+   (boustrophedon) — fila 1 izq->der, baja por la DERECHA, fila del
+   medio der->izq, baja por la IZQUIERDA, fila 3 izq->der otra vez. Como
+   la fila del medio invierte su sentido de lectura visual, este patron
+   ya NO es una formula generica tipo "todo lo que no sea multiplo de
+   3" (eso daba flechas a la derecha tambien en la fila del medio,
+   contra el sentido real del flujo) — son 9 posiciones fijas del grid,
+   listadas una por una a proposito.
+   Nota: el CONTENIDO de la fila del medio ya viene reordenado en el
+   array STAGES (ver ProcessSummary.jsx) para que la tarjeta que se ve
+   arriba a la derecha (etapa 3) efectivamente continue en la de abajo
+   a la derecha (etapa 4) — la flecha sola no alcanza si el contenido
+   no sigue el mismo sentido. */
 .summary__cell::after {
   content: "";
   position: absolute;
@@ -59,51 +70,61 @@
   opacity: 0.75;
 }
 
-/* ---------- Responsive ---------- */
-/* Escritorio: 3 columnas. Filas: (1,2,3) (4,5,6) (7,8,9). */
-@media (min-width: 901px) {
-  /* Flecha derecha: toda tarjeta que NO es la ultima de su fila (o sea,
-     no es multiplo de 3) y no es la ultima de todas. */
-  .summary__cell:not(:nth-child(3n)):not(:last-child)::after {
+/* ---------- Responsive ----------
+   Solo dos estados (3 columnas / 1 columna), sin tier intermedio de 2
+   columnas: el contenido de la fila del medio esta reordenado
+   especificamente para el serpiente de 3 columnas, y una grilla de 2
+   columnas partiria ese orden en filas sin sentido logico. Mas simple
+   y robusto que intentar un serpiente de 2 columnas coherente aparte. */
+@media (min-width: 769px) {
+  /* Fila superior (1,2,3), izquierda a derecha. */
+  .summary__cell:nth-child(1)::after,
+  .summary__cell:nth-child(2)::after {
     content: "›";
     right: -1.65rem;
     top: 50%;
     transform: translateY(-50%);
   }
 
-  /* Flecha abajo: la ultima tarjeta de cada fila (multiplo de 3),
-     excepto si ademas es la ultima de todas (la 9). */
-  .summary__cell:nth-child(3n):not(:last-child)::after {
+  /* Baja de la fila superior a la del medio por la DERECHA
+     (etapa 3 -> etapa 4, posicion 3 -> posicion 6 del grid). */
+  .summary__cell:nth-child(3)::after {
     content: "⌄";
     left: 50%;
     bottom: -1.85rem;
     transform: translateX(-50%);
   }
-}
 
-@media (max-width: 900px) {
-  .summary__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.5rem;
-    row-gap: 2.25rem;
+  /* Baja de la fila del medio a la inferior por la IZQUIERDA
+     (etapa 6 -> etapa 7, posicion 4 del grid). */
+  .summary__cell:nth-child(4)::after {
+    content: "⌄";
+    left: 50%;
+    bottom: -1.85rem;
+    transform: translateX(-50%);
   }
 
-  /* 2 columnas: filas (1,2) (3,4) (5,6) (7,8) (9). Impares = primera de
-     su fila -> flecha derecha (salvo si son la ultima tarjeta de todas,
-     como la 9). Pares = fin de fila -> flecha abajo. */
-  .summary__cell:nth-child(odd):not(:last-child)::after {
-    content: "›";
-    right: -1.2rem;
+  /* Fila del medio (posiciones 5 y 6 del grid = etapas 5 y 4),
+     derecha a izquierda: la flecha va en el hueco IZQUIERDO de cada
+     una, senalando hacia la tarjeta que sigue en el sentido inverso. */
+  .summary__cell:nth-child(5)::after,
+  .summary__cell:nth-child(6)::after {
+    content: "‹";
+    left: -1.65rem;
     top: 50%;
     transform: translateY(-50%);
   }
 
-  .summary__cell:nth-child(even):not(:last-child)::after {
-    content: "⌄";
-    left: 50%;
-    bottom: -1.6rem;
-    transform: translateX(-50%);
+  /* Fila inferior (7,8,9), izquierda a derecha otra vez. */
+  .summary__cell:nth-child(7)::after,
+  .summary__cell:nth-child(8)::after {
+    content: "›";
+    right: -1.65rem;
+    top: 50%;
+    transform: translateY(-50%);
   }
+
+  /* Posicion 9 (ultima): sin flecha, ahi termina el recorrido. */
 }
 
 .summary__details {
@@ -225,23 +246,58 @@
   color: var(--primary);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   .summary__grid {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 2.25rem;
   }
 
+  /* El array STAGES esta en orden de GRILLA (boustrophedon), no en
+     orden logico — la fila del medio guarda el contenido de las
+     etapas 6,5,4 en ese orden para que la cuadricula de 3 columnas se
+     lea bien (ver ProcessSummary.jsx). En una sola columna apilada eso
+     se veria como 1,2,3,6,5,4,7,8,9 de arriba a abajo, fuera de orden.
+     "order" reacomoda la posicion VISUAL sin tocar el DOM/array — hay
+     que ponerlo en las 9 tarjetas: si solo se corrigen 3, esas quedan
+     con "order" positivo y las otras 6 en el default (0), que siempre
+     ordena antes que cualquier valor positivo, rompiendo el resto. */
+  .summary__cell:nth-child(1) {
+    order: 1;
+  }
+  .summary__cell:nth-child(2) {
+    order: 2;
+  }
+  .summary__cell:nth-child(3) {
+    order: 3;
+  }
+  .summary__cell:nth-child(4) {
+    order: 6; /* contiene el contenido de la etapa 6 */
+  }
+  .summary__cell:nth-child(5) {
+    order: 5; /* contiene el contenido de la etapa 5, ya en su lugar */
+  }
+  .summary__cell:nth-child(6) {
+    order: 4; /* contiene el contenido de la etapa 4 */
+  }
+  .summary__cell:nth-child(7) {
+    order: 7;
+  }
+  .summary__cell:nth-child(8) {
+    order: 8;
+  }
+  .summary__cell:nth-child(9) {
+    order: 9;
+  }
+
   /* Una sola columna: cada tarjeta (salvo la ultima) apunta hacia abajo
-     a la siguiente. Se usa ":nth-child(n)" (coincide con todas) a
-     proposito, no ":not(:last-child)" solo — necesita la MISMA
-     especificidad que las reglas de la media query de 900px (dos
-     pseudo-clases) para poder pisarlas aqui; con menos especificidad,
-     el orden en el archivo no alcanza para ganar la cascada. */
-  .summary__cell:nth-child(n):not(:last-child)::after {
+     a la siguiente, en orden logico normal (1..9) — el reordenamiento
+     de la fila del medio solo importa para el layout de 3 columnas de
+     escritorio. Complementario con el "min-width: 769px" de arriba
+     (nunca ambos activos a la vez), asi que alcanza un selector simple
+     sin pelea de especificidad entre breakpoints. */
+  .summary__cell:not(:last-child)::after {
     content: "⌄";
     left: 50%;
-    right: auto;
-    top: auto;
     bottom: -1.6rem;
     transform: translateX(-50%);
   }

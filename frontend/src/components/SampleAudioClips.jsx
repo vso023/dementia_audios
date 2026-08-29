@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IconPlay } from "./icons.jsx";
+import { IconFileAudio } from "./icons.jsx";
 
 // Audios de ejemplo para que cualquiera pueda probar la herramienta sin
 // tener que subir un audio propio. Viven como archivos estaticos en
@@ -9,6 +9,13 @@ import { IconPlay } from "./icons.jsx";
 // del input de "Seleccionar archivo": un File, vía el mismo
 // onAudioListo). Para agregar o cambiar un ejemplo: poner el archivo en
 // esa carpeta y agregar/editar una entrada aca con el mismo nombre.
+//
+// Nombres neutros a proposito (ejemplo-1/2/3, no AD-.../HC-.../MCI-...):
+// los audios de ejemplo deben ser material que se pueda compartir sin
+// problemas de privacidad ni de licencia — nunca copias del dataset real
+// de pacientes (ver el incidente documentado en el historial del
+// proyecto, donde unos archivos con nombres del dataset original
+// resultaron ser grabaciones reales).
 const MUESTRAS = [
   { id: "ejemplo-1", etiqueta: "Ejemplo 1", archivo: "/muestras/ejemplo-1.wav" },
   { id: "ejemplo-2", etiqueta: "Ejemplo 2", archivo: "/muestras/ejemplo-2.wav" },
@@ -74,23 +81,44 @@ export default function SampleAudioClips({ onAudioListo, deshabilitado }) {
 
   return (
     <div className="sample-audio">
-      <p className="sample-audio__label">¿No tienes un audio a mano? Prueba con un ejemplo:</p>
+      <p className="sample-audio__label">¿No tienes un audio a mano? Escucha y prueba con un ejemplo:</p>
       <div className="sample-audio__list">
         {MUESTRAS.map((muestra) => (
-          <button
-            key={muestra.id}
-            type="button"
-            className="btn btn--secondary"
-            onClick={() => usarMuestra(muestra)}
-            disabled={deshabilitado || Boolean(cargando)}
-          >
-            {cargando === muestra.id ? (
-              <span className="spinner" aria-hidden="true" />
-            ) : (
-              <IconPlay width={16} height={16} />
-            )}
-            {muestra.etiqueta}
-          </button>
+          <div key={muestra.id} className="sample-audio__item">
+            <span className="sample-audio__item-label">{muestra.etiqueta}</span>
+
+            {/* Reproducible, pero sin via de descarga facil desde la UI:
+                sin boton/enlace de descarga en ningun lado, controlsList
+                oculta el icono nativo de descargar (Chrome/Edge), y el
+                menu contextual (que en varios navegadores ofrece
+                "Guardar audio como...") queda deshabilitado sobre el
+                reproductor. Ver aviso sobre el alcance real de esto en
+                la respuesta — no es proteccion real, es disuasion. */}
+            <audio
+              className="sample-audio__player"
+              src={muestra.archivo}
+              controls
+              controlsList="nodownload noplaybackrate"
+              onContextMenu={(e) => e.preventDefault()}
+              preload="none"
+            >
+              Tu navegador no puede reproducir audio incrustado.
+            </audio>
+
+            <button
+              type="button"
+              className="btn btn--secondary sample-audio__use-btn"
+              onClick={() => usarMuestra(muestra)}
+              disabled={deshabilitado || Boolean(cargando)}
+            >
+              {cargando === muestra.id ? (
+                <span className="spinner" aria-hidden="true" />
+              ) : (
+                <IconFileAudio width={16} height={16} />
+              )}
+              Usar este audio
+            </button>
+          </div>
         ))}
       </div>
     </div>

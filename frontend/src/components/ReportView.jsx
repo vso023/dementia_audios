@@ -24,10 +24,16 @@ export default function ReportView({ analisis }) {
         <div className="report__body">{analisis.reporte?.contenido}</div>
       </section>
 
-      <details className="report__transcript">
-        <summary>Ver transcripción completa</summary>
-        <p>{analisis.transcripcion}</p>
-      </details>
+      <section>
+        <h3 className="section-card__title" style={{ marginBottom: 12 }}>
+          Transcripción del audio analizado
+        </h3>
+        <p className="report__transcript-note">
+          Texto obtenido automáticamente del audio (Whisper) y usado como una de las dos entradas
+          del clasificador — se muestra para dar transparencia sobre qué se transcribió y analizó.
+        </p>
+        <div className="report__body">{analisis.transcripcion}</div>
+      </section>
     </div>
   );
 }

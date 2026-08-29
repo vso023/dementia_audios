@@ -647,8 +647,37 @@ textarea {
 
 .sample-audio__list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--space-2);
+}
+
+.sample-audio__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+
+.sample-audio__item-label {
+  flex: 0 0 auto;
+  min-width: 5.5rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sample-audio__player {
+  flex: 1 1 220px;
+  min-width: 200px;
+  height: 36px;
+}
+
+.sample-audio__use-btn {
+  flex: 0 0 auto;
 }
 
 .file-summary {
@@ -837,18 +866,10 @@ textarea {
   color: var(--text-primary);
 }
 
-.report__transcript summary {
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-
-.report__transcript p {
-  margin-top: var(--space-3);
-  white-space: pre-wrap;
+.report__transcript-note {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
-  font-size: var(--font-size-sm);
 }
 
 /* ── Utilidades ──────────────────────────────────────────────────── */
