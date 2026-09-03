@@ -44,16 +44,32 @@ export default function ProcessingStatus({ estado }) {
 
   if (estado === "procesando") {
     return (
-      <div className="status-panel status-panel--processing" role="status" aria-live="polite">
+      <div
+        className="status-panel status-panel--processing"
+        role="status"
+        aria-live="polite"
+        style={{ alignItems: "flex-start" }}
+      >
         <span className="spinner" aria-hidden="true" />
-        <span>
-          Procesando audio — transcribiendo y clasificando con el modelo
-          multimodal. En este servidor puede tardar varios minutos; no
-          hace falta que hagas nada, pero no cierres esta pestaña si
-          quieres ver el reporte apenas esté listo.
-          <br />
-          <strong>Tiempo transcurrido: {formatearTiempo(segundos)}</strong>
-        </span>
+        <div className="status-panel__body">
+          <p className="status-panel__headline">
+            Analizando la muestra de voz. Esto puede tardar varios minutos.
+          </p>
+          <p className="status-panel__detail">
+            Transcribiendo y clasificando con el modelo multimodal. En este servidor puede
+            tardar varios minutos; no hace falta que hagas nada, pero no cierres esta pestaña
+            si quieres ver el reporte apenas esté listo.
+          </p>
+          {/* Indeterminada a propósito: el frontend no conoce el avance real del
+              backend, así que no muestra un porcentaje — solo comunica que sigue
+              trabajando, junto con el contador de tiempo. */}
+          <div className="progress-bar" role="progressbar" aria-label="Analizando el audio">
+            <div className="progress-bar__fill" />
+          </div>
+          <p className="status-panel__time">
+            Tiempo transcurrido: <strong>{formatearTiempo(segundos)}</strong>
+          </p>
+        </div>
       </div>
     );
   }

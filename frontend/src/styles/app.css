@@ -784,6 +784,57 @@ textarea {
   border: 1px solid #f3ccd1;
 }
 
+.status-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.status-panel__headline {
+  font-weight: 700;
+}
+
+.status-panel__detail {
+  color: var(--text-secondary);
+}
+
+.status-panel__time {
+  margin: 0;
+}
+
+/* Barra indeterminada: no representa avance real (el frontend no conoce
+   el progreso del backend), solo comunica actividad continua junto al
+   contador de tiempo transcurrido. */
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(49, 87, 200, 0.15);
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  animation: progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
 /* ── Historial ───────────────────────────────────────────────────── */
 .historial-list {
   display: flex;
