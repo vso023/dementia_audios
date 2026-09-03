@@ -138,7 +138,10 @@ export default function ToolPage() {
               Analizar otro audio
             </button>
 
-            <ReportView analisis={analisis} />
+            <ReportView
+              analisis={analisis}
+              paciente={pacientes.find((p) => String(p.id) === String(pacienteId))}
+            />
           </div>
         )}
 

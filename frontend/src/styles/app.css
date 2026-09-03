@@ -518,6 +518,11 @@ textarea {
   color: var(--text-secondary);
 }
 
+.badge--error {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
 /* ── Patient summary ─────────────────────────────────────────────── */
 .patient-summary {
   display: flex;
@@ -840,9 +845,39 @@ textarea {
 }
 
 .classification-card__confidence {
-  margin-top: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.classification-card__confidence-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.classification-card__confidence-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.classification-card__detail {
+  margin-top: var(--space-3);
+}
+
+.classification-card__detail summary {
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--primary-dark);
 }
 
 .classification-card__probs {

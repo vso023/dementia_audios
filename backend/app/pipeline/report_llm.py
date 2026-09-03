@@ -21,6 +21,26 @@ import anthropic
 from app.config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL, require_llm_config
 from app.pipeline.multimodal_classifier import ClasificacionMultimodal
 
+# Mismos umbrales y misma logica que categorizarConfianza() en
+# ReportView.jsx (frontend) — deben coincidir para que la tarjeta de
+# clasificacion y el texto que redacta el LLM digan lo mismo. Se
+# duplica aca a proposito (Python vs. JS, sin runtime en comun); si se
+# cambian los umbrales, cambiar en los dos lados.
+# Justificacion de los cortes: son 3 clases (AD/HC/MCI), el azar puro
+# da ~0.33, asi que la probabilidad ganadora nunca es menor a eso —
+# 0.50 no parte [0,1] a la mitad, parte el rango realmente posible.
+UMBRAL_CONFIANZA_ALTA = 0.8
+UMBRAL_CONFIANZA_MEDIA = 0.5
+
+
+def _categorizar_confianza(confianza: float) -> str:
+    if confianza > UMBRAL_CONFIANZA_ALTA:
+        return "alta"
+    if confianza >= UMBRAL_CONFIANZA_MEDIA:
+        return "media"
+    return "baja"
+
+
 DISCLAIMER_FIJO = (
     "\n\n---\n"
     "**Aviso importante:** este reporte es un insumo de apoyo generado por "
@@ -43,7 +63,12 @@ legible al lector — NO son la razón por la que el modelo clasificó como lo h
 modelo usa representaciones internas del audio y el texto, no esas características). \
 Preséntalas como contexto descriptivo, nunca como "el modelo decidió esto porque esa \
 característica es alta/baja".
-- No inventes ni redondees la confianza más allá del número que se te da.
+- La confianza del modelo se te da como categoría (alta / media / baja), nunca como \
+número. Refiérete a ella SIEMPRE en esos términos exactos (por ejemplo: "con una \
+confianza alta", "la confianza del modelo es media"). NUNCA inventes, calcules ni \
+menciones un porcentaje o número puntual de confianza — ni siquiera aproximado — \
+aunque el lector pueda esperarlo; la categoría es deliberada para no transmitir una \
+falsa precisión numérica.
 - Debes incluir explícitamente, en algún punto del reporte, que esto es un insumo de \
 apoyo y NO un diagnóstico médico.
 - Sé conciso, claro, y evita jerga técnica innecesaria; el lector puede ser un \
@@ -63,9 +88,7 @@ def _construir_prompt_usuario(
     features_audio: dict,
     features_texto: dict,
 ) -> str:
-    otras_probs = ", ".join(
-        f"{clase}: {p:.2f}" for clase, p in clasificacion.probabilidades.items()
-    )
+    categoria_confianza = _categorizar_confianza(clasificacion.confianza)
     return f"""Redacta un reporte interpretable a partir de este resultado:
 
 ## Transcripción del audio (Whisper)
@@ -73,8 +96,8 @@ def _construir_prompt_usuario(
 
 ## Clasificación (modelo multimodal: audio + texto)
 - Clasificación: {clasificacion.clasificacion}
-- Confianza del modelo: {clasificacion.confianza:.2f}
-- Probabilidades por clase: {otras_probs}
+- Confianza del modelo: {categoria_confianza} (no se te da el número exacto a propósito — \
+ver reglas del sistema sobre cómo referirte a esto)
 
 ## Características descriptivas observadas (contexto, no la causa de la clasificación)
 - Audio: duración={features_audio.get('duracion', 'n/d')}, \
