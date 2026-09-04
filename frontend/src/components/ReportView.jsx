@@ -68,18 +68,55 @@ export default function ReportView({ analisis, paciente }) {
     setExportando(true);
     setErrorExportar(null);
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-      await html2pdf()
-        .set({
-          margin: 10,
-          filename: construirNombreArchivo(paciente, analisis),
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"] },
-        })
-        .from(printableRef.current)
-        .save();
+      // NOTA: se probó primero con html2pdf.js, pero el html2canvas que trae
+      // empaquetado (viejo, sin mantenimiento activo) mide mal la posición y
+      // el tamaño real de la plantilla en navegadores Chromium recientes —
+      // reporta 0 de alto y termina generando un PDF en blanco, verificado
+      // reproduciendo el bug incluso llamando a html2canvas directamente,
+      // sin pasar por React. html2canvas-pro es un fork mantenido que sí
+      // mide la plantilla correctamente (verificado con captura de pixeles
+      // real, no solo que "no tire error").
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(printableRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        // scrollX/scrollY en 0: la plantilla vive en position:absolute fuera
+        // de pantalla (ver ReportePrintable) — sin esto, si el usuario
+        // scrolleó el reporte visible antes de exportar, la captura puede
+        // recortar la región equivocada.
+        scrollX: 0,
+        scrollY: 0,
+      });
+      const imagenDatos = canvas.toDataURL("image/jpeg", 0.98);
+
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const anchoPagina = pdf.internal.pageSize.getWidth();
+      const altoPagina = pdf.internal.pageSize.getHeight();
+      // Ancho de la imagen a todo lo ancho de la pagina, manteniendo su
+      // proporcion real (la plantilla ya trae su propio padding interno,
+      // asi que no hace falta margen extra aca).
+      const anchoImagen = anchoPagina;
+      const altoImagen = (canvas.height * anchoImagen) / canvas.width;
+
+      // Reporte puede ser mas alto que una pagina A4 (texto + transcripcion
+      // largos): se corta en paginas sucesivas desplazando la misma imagen
+      // hacia arriba, tecnica estandar de jsPDF + html2canvas para contenido
+      // que no cabe en una sola pagina.
+      let alturaRestante = altoImagen;
+      let posicionY = 0;
+      pdf.addImage(imagenDatos, "JPEG", 0, posicionY, anchoImagen, altoImagen);
+      alturaRestante -= altoPagina;
+      while (alturaRestante > 0) {
+        posicionY = alturaRestante - altoImagen;
+        pdf.addPage();
+        pdf.addImage(imagenDatos, "JPEG", 0, posicionY, anchoImagen, altoImagen);
+        alturaRestante -= altoPagina;
+      }
+
+      pdf.save(construirNombreArchivo(paciente, analisis));
     } catch (e) {
       console.error(e);
       setErrorExportar("No se pudo generar el PDF. Intenta de nuevo.");
@@ -222,7 +259,7 @@ const ReportePrintable = forwardRef(function ReportePrintable({ analisis, pacien
     <div
       ref={ref}
       style={{
-        position: "fixed",
+        position: "absolute",
         top: 0,
         left: "-10000px",
         width: "780px",
