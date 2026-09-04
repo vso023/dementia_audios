@@ -1,6 +1,7 @@
-import { forwardRef, useRef, useState } from "react";
+import { useState } from "react";
 import DisclaimerBanner from "./DisclaimerBanner.jsx";
 import { IconAlertCircle, IconCheckCircle, IconDownload } from "./icons.jsx";
+import { construirNombreArchivo, construirReportePdf } from "../lib/generarReportePdf.js";
 
 // Umbrales de categoría de confianza. Se calculan sobre la probabilidad
 // de la clase ganadora que el modelo YA produce — no se toca el modelo
@@ -24,41 +25,7 @@ function categorizarConfianza(confianza) {
   return { etiqueta: "Baja", variante: "error" };
 }
 
-function formatearFecha(iso) {
-  if (!iso) return null;
-  const fecha = new Date(iso);
-  if (Number.isNaN(fecha.getTime())) return null;
-  return fecha.toLocaleString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-// "reporte_juan_perez_2026-09-03.pdf" — sin tildes ni espacios, para que
-// el nombre de archivo sea predecible en cualquier sistema operativo.
-function normalizarParaArchivo(texto) {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .toLowerCase();
-}
-
-function construirNombreArchivo(paciente, analisis) {
-  const nombrePaciente = paciente?.nombre ? normalizarParaArchivo(paciente.nombre) : "paciente";
-  const fechaBase = analisis?.fecha ? new Date(analisis.fecha) : new Date();
-  const fechaIso = Number.isNaN(fechaBase.getTime())
-    ? new Date().toISOString().slice(0, 10)
-    : fechaBase.toISOString().slice(0, 10);
-  return `reporte_${nombrePaciente}_${fechaIso}.pdf`;
-}
-
 export default function ReportView({ analisis, paciente }) {
-  const printableRef = useRef(null);
   const [exportando, setExportando] = useState(false);
   const [errorExportar, setErrorExportar] = useState(null);
 
@@ -68,55 +35,16 @@ export default function ReportView({ analisis, paciente }) {
     setExportando(true);
     setErrorExportar(null);
     try {
-      // NOTA: se probó primero con html2pdf.js, pero el html2canvas que trae
-      // empaquetado (viejo, sin mantenimiento activo) mide mal la posición y
-      // el tamaño real de la plantilla en navegadores Chromium recientes —
-      // reporta 0 de alto y termina generando un PDF en blanco, verificado
-      // reproduciendo el bug incluso llamando a html2canvas directamente,
-      // sin pasar por React. html2canvas-pro es un fork mantenido que sí
-      // mide la plantilla correctamente (verificado con captura de pixeles
-      // real, no solo que "no tire error").
-      const html2canvas = (await import("html2canvas-pro")).default;
+      // Se escribe el contenido directamente con jsPDF (doc.text /
+      // splitTextToSize), sin capturar ningún elemento del DOM. Se probó
+      // antes con html2pdf.js y luego con html2canvas-pro, pero capturar el
+      // DOM como imagen resultó poco confiable en el entorno real de
+      // despliegue (páginas en blanco). Escribir el texto a mano no
+      // depende de renderizar ni fotografiar nada.
       const { jsPDF } = await import("jspdf");
-
-      const canvas = await html2canvas(printableRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        // scrollX/scrollY en 0: la plantilla vive en position:absolute fuera
-        // de pantalla (ver ReportePrintable) — sin esto, si el usuario
-        // scrolleó el reporte visible antes de exportar, la captura puede
-        // recortar la región equivocada.
-        scrollX: 0,
-        scrollY: 0,
-      });
-      const imagenDatos = canvas.toDataURL("image/jpeg", 0.98);
-
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const anchoPagina = pdf.internal.pageSize.getWidth();
-      const altoPagina = pdf.internal.pageSize.getHeight();
-      // Ancho de la imagen a todo lo ancho de la pagina, manteniendo su
-      // proporcion real (la plantilla ya trae su propio padding interno,
-      // asi que no hace falta margen extra aca).
-      const anchoImagen = anchoPagina;
-      const altoImagen = (canvas.height * anchoImagen) / canvas.width;
-
-      // Reporte puede ser mas alto que una pagina A4 (texto + transcripcion
-      // largos): se corta en paginas sucesivas desplazando la misma imagen
-      // hacia arriba, tecnica estandar de jsPDF + html2canvas para contenido
-      // que no cabe en una sola pagina.
-      let alturaRestante = altoImagen;
-      let posicionY = 0;
-      pdf.addImage(imagenDatos, "JPEG", 0, posicionY, anchoImagen, altoImagen);
-      alturaRestante -= altoPagina;
-      while (alturaRestante > 0) {
-        posicionY = alturaRestante - altoImagen;
-        pdf.addPage();
-        pdf.addImage(imagenDatos, "JPEG", 0, posicionY, anchoImagen, altoImagen);
-        alturaRestante -= altoPagina;
-      }
-
-      pdf.save(construirNombreArchivo(paciente, analisis));
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      construirReportePdf(doc, analisis, paciente);
+      doc.save(construirNombreArchivo(paciente, analisis));
     } catch (e) {
       console.error(e);
       setErrorExportar("No se pudo generar el PDF. Intenta de nuevo.");
@@ -172,12 +100,6 @@ export default function ReportView({ analisis, paciente }) {
         </p>
         <div className="report__body">{analisis.transcripcion}</div>
       </section>
-
-      {/* Plantilla fuera de pantalla, nunca visible para el usuario: existe solo
-          para que html2pdf/html2canvas la capture. Se mantiene siempre montada
-          (no display:none, que html2canvas no puede fotografiar) para que el
-          click en "Descargar PDF" no dependa de un segundo render. */}
-      <ReportePrintable ref={printableRef} analisis={analisis} paciente={paciente} />
     </div>
   );
 }
@@ -218,156 +140,3 @@ function ClasificacionCard({ clasificacion, confianza, probabilidades }) {
     </div>
   );
 }
-
-const estiloTituloSeccion = {
-  fontSize: "14px",
-  fontWeight: 700,
-  color: "#20233a",
-  margin: "0 0 8px",
-  borderBottom: "1px solid #dfe3ed",
-  paddingBottom: "4px",
-};
-
-const estiloEtiquetaCelda = {
-  color: "#687086",
-  paddingRight: "10px",
-  verticalAlign: "top",
-  whiteSpace: "nowrap",
-};
-
-const estiloCajaTexto = {
-  background: "#f1f3f8",
-  borderRadius: "8px",
-  padding: "12px 14px",
-  whiteSpace: "pre-wrap",
-  fontSize: "12px",
-  lineHeight: 1.5,
-  color: "#20233a",
-};
-
-// Plantilla independiente del CSS de la app (estilos inline, sin clases):
-// se renderiza fuera de pantalla y html2canvas la fotografía tal cual, asi
-// que no puede depender de que ".tool-shell" este presente en el arbol ni
-// de estados interactivos como <details> (que si estuviera cerrado no
-// aparecería en la captura). Todo lo que debe verse en el PDF se muestra
-// siempre expandido.
-const ReportePrintable = forwardRef(function ReportePrintable({ analisis, paciente }, ref) {
-  const { etiqueta } = categorizarConfianza(analisis.confianza);
-  const fecha = formatearFecha(analisis.fecha) || formatearFecha(new Date().toISOString());
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: "-10000px",
-        width: "780px",
-        padding: "32px",
-        background: "#ffffff",
-        color: "#20233a",
-        fontFamily: "Arial, Helvetica, sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: "18px", margin: "0 0 4px" }}>
-        Reporte de análisis — Herramienta de apoyo a detección de deterioro cognitivo
-      </h1>
-      <p style={{ margin: "0 0 18px", color: "#687086", fontSize: "12px" }}>
-        Fecha del análisis: {fecha}
-      </p>
-
-      <div
-        style={{
-          border: "1px solid #f0d999",
-          background: "#fff8e8",
-          color: "#7a5200",
-          borderRadius: "10px",
-          padding: "14px 16px",
-          marginBottom: "20px",
-          fontSize: "12px",
-          lineHeight: 1.5,
-        }}
-      >
-        <strong>Aviso: </strong>
-        esta herramienta es un insumo de apoyo generado por modelos automáticos. No constituye
-        un diagnóstico médico. Los resultados deben ser interpretados por un profesional de la
-        salud calificado. La categoría de confianza es orientativa.
-      </div>
-
-      {paciente && (
-        <div style={{ marginBottom: "20px" }}>
-          <h2 style={estiloTituloSeccion}>Datos del paciente</h2>
-          <table style={{ fontSize: "12px", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr>
-                <td style={estiloEtiquetaCelda}>Nombre:</td>
-                <td>{paciente.nombre}</td>
-              </tr>
-              {paciente.fecha_nacimiento && (
-                <tr>
-                  <td style={estiloEtiquetaCelda}>Fecha de nacimiento:</td>
-                  <td>{paciente.fecha_nacimiento}</td>
-                </tr>
-              )}
-              {paciente.sexo && (
-                <tr>
-                  <td style={estiloEtiquetaCelda}>Sexo:</td>
-                  <td>{paciente.sexo}</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <div style={{ marginBottom: "20px" }}>
-        <h2 style={estiloTituloSeccion}>Clasificación</h2>
-        <p style={{ margin: "6px 0", fontSize: "13px" }}>
-          Resultado: <strong>{analisis.clasificacion}</strong>
-        </p>
-        <p style={{ margin: "6px 0", fontSize: "13px" }}>
-          Categoría de confianza: <strong>{etiqueta}</strong>
-        </p>
-        {analisis.probabilidades && (
-          <table style={{ fontSize: "12px", marginTop: "8px", borderCollapse: "collapse" }}>
-            <tbody>
-              {Object.entries(analisis.probabilidades).map(([clase, p]) => (
-                <tr key={clase}>
-                  <td style={estiloEtiquetaCelda}>{clase}:</td>
-                  <td>{(p * 100).toFixed(0)}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <h2 style={estiloTituloSeccion}>Reporte</h2>
-        <div style={estiloCajaTexto}>{analisis.reporte?.contenido || "—"}</div>
-      </div>
-
-      <div style={{ marginBottom: "12px" }}>
-        <h2 style={estiloTituloSeccion}>Transcripción del audio analizado</h2>
-        <p style={{ fontSize: "11px", color: "#687086", margin: "0 0 8px" }}>
-          Texto obtenido automáticamente del audio (Whisper), usado como una de las dos entradas
-          del clasificador.
-        </p>
-        <div style={estiloCajaTexto}>{analisis.transcripcion || "—"}</div>
-      </div>
-
-      <div
-        style={{
-          marginTop: "20px",
-          borderTop: "1px solid #dfe3ed",
-          paddingTop: "12px",
-          fontSize: "10px",
-          color: "#687086",
-        }}
-      >
-        Este documento fue generado automáticamente por la Herramienta de apoyo a detección de
-        deterioro cognitivo. No sustituye una evaluación clínica.
-      </div>
-    </div>
-  );
-});
