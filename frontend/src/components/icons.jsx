@@ -192,3 +192,15 @@ export function IconDownload(props) {
     </svg>
   );
 }
+
+export function IconTrash(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 7h14" />
+      <path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2" />
+      <path d="M7 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h5.4a1.5 1.5 0 0 0 1.5-1.4L17 7" />
+      <path d="M10.2 10.5v6" />
+      <path d="M13.8 10.5v6" />
+    </svg>
+  );
+}

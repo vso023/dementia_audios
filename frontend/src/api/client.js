@@ -56,3 +56,8 @@ export async function historialPaciente(pacienteId) {
   if (!res.ok) throw new Error("No se pudo cargar el historial");
   return res.json();
 }
+
+export async function eliminarAnalisis(analisisId) {
+  const res = await fetch(`/api/analisis/${analisisId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`No se pudo eliminar el análisis (${res.status})`);
+}

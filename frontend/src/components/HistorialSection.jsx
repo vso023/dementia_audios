@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SectionCard from "./SectionCard.jsx";
-import { IconCalendar } from "./icons.jsx";
-import { historialPaciente } from "../api/client.js";
+import { IconCalendar, IconTrash } from "./icons.jsx";
+import { eliminarAnalisis, historialPaciente } from "../api/client.js";
 
 const VARIANTE_POR_CLASE = { HC: "success", AD: "warning", MCI: "info" };
 
@@ -24,6 +24,9 @@ function formatearFecha(iso) {
 export default function HistorialSection({ pacienteId, refreshKey }) {
   const [historial, setHistorial] = useState([]);
   const [estado, setEstado] = useState("idle"); // idle | cargando | listo | error
+  // id del analisis que se esta eliminando en este momento (null si ninguno)
+  // — deshabilita solo el boton de esa fila mientras el DELETE esta en vuelo.
+  const [eliminandoId, setEliminandoId] = useState(null);
 
   useEffect(() => {
     if (!pacienteId) {
@@ -50,6 +53,24 @@ export default function HistorialSection({ pacienteId, refreshKey }) {
 
   if (!pacienteId) return null;
 
+  async function handleEliminar(item) {
+    const confirmado = window.confirm(
+      `¿Eliminar el análisis del ${formatearFecha(item.fecha)} (${item.clasificacion})? Esta acción no se puede deshacer.`
+    );
+    if (!confirmado) return;
+
+    setEliminandoId(item.id);
+    try {
+      await eliminarAnalisis(item.id);
+      setHistorial((prev) => prev.filter((a) => a.id !== item.id));
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo eliminar el análisis. Intenta de nuevo.");
+    } finally {
+      setEliminandoId(null);
+    }
+  }
+
   return (
     <SectionCard
       icon={<IconCalendar width={20} height={20} />}
@@ -74,6 +95,16 @@ export default function HistorialSection({ pacienteId, refreshKey }) {
               <span className="historial-list__confianza">
                 Confianza: {(item.confianza * 100).toFixed(0)}%
               </span>
+              <button
+                type="button"
+                className="historial-list__eliminar"
+                onClick={() => handleEliminar(item)}
+                disabled={eliminandoId === item.id}
+                aria-label={`Eliminar análisis del ${formatearFecha(item.fecha)}`}
+                title="Eliminar análisis"
+              >
+                <IconTrash width={16} height={16} />
+              </button>
             </li>
           ))}
         </ul>

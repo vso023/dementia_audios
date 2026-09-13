@@ -868,6 +868,31 @@ textarea {
   font-size: var(--font-size-xs);
 }
 
+.historial-list__eliminar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.historial-list__eliminar:hover:not(:disabled) {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.historial-list__eliminar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* ── Reporte ─────────────────────────────────────────────────────── */
 .report {
   display: flex;

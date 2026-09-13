@@ -116,6 +116,18 @@ def detalle_analisis(analisis_id: int, db: Session = Depends(get_session)):
     return analisis
 
 
+# RF-12: eliminar un analisis del historial. El modelo ya declara
+# cascade="all, delete-orphan" en Analisis.reporte (ver app/db.py), asi que
+# db.delete(analisis) borra tambien su Reporte asociado sin pasos extra.
+@app.delete("/api/analisis/{analisis_id}", status_code=204)
+def eliminar_analisis(analisis_id: int, db: Session = Depends(get_session)):
+    analisis = db.get(Analisis, analisis_id)
+    if not analisis:
+        raise HTTPException(404, "Analisis no encontrado")
+    db.delete(analisis)
+    db.commit()
+
+
 # ── Analisis (endpoint principal: sube audio → procesa → guarda → reporte) ──
 @app.post("/api/analisis", response_model=AnalisisOut)
 async def crear_analisis(
